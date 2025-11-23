@@ -17,14 +17,16 @@ public class DashboardService : IDashboardService
         var users = await _context.Users.CountAsync();
         var apiCalls = await _context.Apikeys.SumAsync(a => (int?)a.RequestCount ?? 0);
         var searches = await _context.SearchHistories.CountAsync();
-        var apiKeys = await _context.Apikeys.CountAsync(); 
+        var apiKeyCount = await _context.Apikeys.CountAsync();
+
+
 
         return new DashboardStatsDto
         {
             Users = users,
             ApiCalls = apiCalls,
             Searches = searches,
-            ApiKeys = apiKeys 
+            ApiKeys = apiKeyCount
         };
     }
 }

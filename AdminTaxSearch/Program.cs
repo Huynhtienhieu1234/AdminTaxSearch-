@@ -14,8 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 // ----------------------------
 builder.Services.AddControllers();
 
-
 builder.Services.AddControllers();
+
 
 
 
@@ -27,7 +27,6 @@ var key = Encoding.UTF8.GetBytes(jwtConfig.SecretKey);
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ChatbotService>();
 builder.Services.AddScoped<TaxService>();
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -44,7 +43,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(key)
         };
     });
-
 
 // DbContext SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -78,6 +76,13 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 // Swagger (tuỳ chọn, để test API dễ)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+
+// Đăng ký UserService
+builder.Services.AddScoped<UserService>();
+
+
+
 
 // ----------------------------
 // 2. Build App
