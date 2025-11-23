@@ -1,0 +1,6 @@
+@AdminTaxSearch_HostAddress = http://localhost:5124
+
+GET {{AdminTaxSearch_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
