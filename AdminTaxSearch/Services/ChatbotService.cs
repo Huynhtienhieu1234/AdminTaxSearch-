@@ -22,30 +22,46 @@ namespace AdminTaxSearch.Services
                 // --- Chuẩn bị payload Ollama ---
                 var request = new
                 {
-                    model = "llama3",       // tên model chính xác
-                    prompt = prompt,        // prompt người dùng
-                    temperature = 0.7,      // tạo câu trả lời tự nhiên
-                    max_tokens = 300
+                    model = "llama3:latest",  // ← ĐỔI THÀNH "llama3:latest" hoặc "llama3:8b"
+                    prompt = prompt,
+                    stream = false,
+                    system = "Bạn là trợ lý AI tra cứu thuế thông minh của Việt Nam. " +
+                             "Luôn luôn trả lời bằng tiếng Việt có dấu. " +
+                             "Cung cấp thông tin chính xác, chi tiết về mã số thuế, CCCD, thông tin doanh nghiệp và cá nhân. " +
+                             "Hãy thân thiện, chuyên nghiệp và dễ hiểu. " +
+                             "QUAN TRỌNG: Tất cả câu trả lời phải bằng tiếng Việt.",
+
+                    options = new
+                    {
+                        temperature = 0.7,
+                        num_predict = 500
+                    }
                 };
 
-                var response = await _http.PostAsJsonAsync("http://localhost:11434/v1/completions", request);
+                // Đổi endpoint thành API chuẩn của Ollama
+                var response = await _http.PostAsJsonAsync(
+                    "http://localhost:11434/api/generate",
+                    request
+                );
 
                 if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"❌ Ollama Error: {errorBody}");
                     return $"Ollama server trả về lỗi: {response.StatusCode}";
+                }
 
-                using var jsonDoc = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+                using var jsonDoc = await JsonDocument.ParseAsync(
+                    await response.Content.ReadAsStreamAsync()
+                );
                 var root = jsonDoc.RootElement;
 
                 string aiReply = null;
 
-                // Ollama trả về text trong choices[0].text
-                if (root.TryGetProperty("choices", out var choices) && choices.GetArrayLength() > 0)
+                // Ollama API chuẩn trả về "response"
+                if (root.TryGetProperty("response", out var responseProp))
                 {
-                    var firstChoice = choices[0];
-                    if (firstChoice.TryGetProperty("text", out var textProp))
-                    {
-                        aiReply = textProp.GetString()?.Trim();
-                    }
+                    aiReply = responseProp.GetString()?.Trim();
                 }
 
                 // Fallback nếu rỗng
@@ -56,9 +72,9 @@ namespace AdminTaxSearch.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"❌ Exception: {ex.Message}");
                 return $"Không thể kết nối tới Ollama (Lỗi: {ex.Message})";
             }
         }
-
     }
 }
